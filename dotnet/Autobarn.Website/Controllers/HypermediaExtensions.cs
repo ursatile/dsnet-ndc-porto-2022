@@ -1,4 +1,5 @@
 using Autobarn.Data.Entities;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Dynamic;
@@ -34,6 +35,32 @@ public static class Hal {
 
     public static bool Ignore(PropertyDescriptor prop) {
         return prop.Attributes.OfType<Newtonsoft.Json.JsonIgnoreAttribute>().Any();
+    }
+
+    public static IEnumerable<dynamic> ToResources<T>(this IEnumerable<T> list)
+        where T : class {
+        return list.Select(item => Hal.ToResource(item));
+    }
+
+    public static dynamic ToResource(object o) {
+        throw new NotImplementedException();
+    }
+
+    public static dynamic ToResource(this Model model) {
+        var result = model.ToDynamic();
+        result._links = new {
+            self = new {
+                href = $"/api/models/{model.Code}"
+            },
+            manufacturer = new {
+                href = $"/api/manufacturers/{model.ManufacturerCode}"
+            },
+            vehicles = new {
+                href = $"/api/models/{model.Code}/vehicles"
+            }
+        };
+
+        return result;
     }
 
     public static dynamic ToResource(this Vehicle v) {

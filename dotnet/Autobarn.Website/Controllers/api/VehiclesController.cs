@@ -22,7 +22,7 @@ namespace Autobarn.Website.Controllers.api {
 		[HttpGet]
 		[Produces("application/hal+json")]
 		public IActionResult Get(int index = 0, int count = 10) {
-			var items = db.ListVehicles().Skip(index).Take(count).Select(v => v.ToResource());
+			var items = db.ListVehicles().Skip(index).Take(count).ToResources();
 			var total = db.CountVehicles();
 			var result = new {
 				_links = Hal.Paginate("/api/vehicles", index, count, total),
@@ -47,19 +47,23 @@ namespace Autobarn.Website.Controllers.api {
 		// POST api/vehicles
 		[HttpPost]
 		public IActionResult Post([FromBody] VehicleDto dto) {
-			var vehicleModel = db.FindModel(dto.ModelCode);
-			var vehicle = new Vehicle {
-				Registration = dto.Registration,
-				Color = dto.Color,
-				Year = dto.Year,
-				VehicleModel = vehicleModel
-			};
-			db.CreateVehicle(vehicle);
-			return Ok(dto);
-		}
+            var existing = db.FindVehicle(dto.Registration);
 
-		// PUT api/vehicles/ABC123
-		[HttpPut("{id}")]
+            if (existing != default) return Conflict($"Sorry, there is already a vehicle with code {dto.Registration} listed for sale.");
+
+            var vehicleModel = db.FindModel(dto.ModelCode);
+            var vehicle = new Vehicle {
+                Registration = dto.Registration,
+                Color = dto.Color,
+                Year = dto.Year,
+                VehicleModel = vehicleModel
+            };
+            db.CreateVehicle(vehicle);
+            return Created($"/api/vehicles/{vehicle.Registration}", dto);
+        }
+
+        // PUT api/vehicles/ABC123
+        [HttpPut("{id}")]
 		public IActionResult Put(string id, [FromBody] VehicleDto dto) {
 			var vehicleModel = db.FindModel(dto.ModelCode);
 			var vehicle = new Vehicle {

@@ -2,6 +2,7 @@
 using Autobarn.Data.Entities;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace Autobarn.Website.Controllers.api {
 	[Route("api/[controller]")]
@@ -14,8 +15,9 @@ namespace Autobarn.Website.Controllers.api {
 		}
 
 		[HttpGet]
-		public IEnumerable<Model> Get() {
-			return db.ListModels();
+		public IActionResult Get() {
+			var result = db.ListModels().Select(model => model.ToResource());
+			return Ok(result);
 		}
 
 		[HttpGet("{id}")]
