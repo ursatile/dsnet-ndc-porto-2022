@@ -21,7 +21,7 @@ namespace Autobarn.Website {
                 })
                 .ConfigureWebHostDefaults(webBuilder => {
                     webBuilder.ConfigureKestrel(options => {
-                        var pfxPassword = Environment.GetEnvironmentVariable("UrsatilePfxPassword");
+                        var pfxPassword = Environment.GetEnvironmentVariable("AutobarnPfxPassword");
                         var https = UseCertIfAvailable(@"D:\Dropbox\workshop.ursatile.com\workshop.ursatile.com.pfx", pfxPassword);
                         options.ListenAnyIP(5000, listenOptions => listenOptions.Protocols = HttpProtocols.Http1AndHttp2);
                         options.Listen(IPAddress.Any, 5001, https);
@@ -32,7 +32,7 @@ namespace Autobarn.Website {
             );
 
         private static Action<ListenOptions> UseCertIfAvailable(string pfxFilePath, string pfxPassword) {
-            //if (File.Exists(pfxFilePath)) return listen => listen.UseHttps(pfxFilePath, pfxPassword);
+            if (File.Exists(pfxFilePath)) return listen => listen.UseHttps(pfxFilePath, pfxPassword);
             return listen => listen.UseHttps();
         }
     }
