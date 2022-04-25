@@ -9,7 +9,7 @@ using System.Linq;
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
 
 namespace Autobarn.Website.Controllers.api {
-	[Route("api/[controller]")]
+    [Route("api/[controller]")]
 	[ApiController]
 	public class VehiclesController : ControllerBase {
 		private readonly IAutobarnDatabase db;
