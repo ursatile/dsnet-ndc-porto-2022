@@ -32,7 +32,7 @@ namespace Autobarn.Website {
             );
 
         private static Action<ListenOptions> UseCertIfAvailable(string pfxFilePath, string pfxPassword) {
-            if (File.Exists(pfxFilePath)) return listen => listen.UseHttps(pfxFilePath, pfxPassword);
+            //if (File.Exists(pfxFilePath)) return listen => listen.UseHttps(pfxFilePath, pfxPassword);
             return listen => listen.UseHttps();
         }
     }
