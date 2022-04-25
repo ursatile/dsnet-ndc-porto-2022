@@ -3,6 +3,7 @@ using Autobarn.Data.Entities;
 using Autobarn.Website.Models;
 using Microsoft.AspNetCore.Mvc;
 using System.Collections.Generic;
+using System.Dynamic;
 using System.Linq;
 
 // For more information on enabling Web API for empty projects, visit https://go.microsoft.com/fwlink/?LinkID=397860
@@ -17,18 +18,17 @@ namespace Autobarn.Website.Controllers.api {
 			this.db = db;
 		}
 
-		const int PAGE_SIZE = 10;
 		// GET: api/vehicles
 		[HttpGet]
 		[Produces("application/hal+json")]
-		public IActionResult Get(int index = 0) {
-			var items = db.ListVehicles().Skip(index).Take(PAGE_SIZE);
+		public IActionResult Get(int index = 0, int count = 10) {
+			var items = db.ListVehicles().Skip(index).Take(count);
+			var total = db.CountVehicles();
 			var result = new {
-				_links = new {
-					next = new {
-						href = $"/api/vehicles?index={index+PAGE_SIZE}"
-					}
-				},
+				_links = Hal.Paginate("/api/vehicles", index, count, total),
+				total,
+				count,
+				index,
 				items
 			};
 			return Ok(result);
