@@ -44,23 +44,6 @@ namespace Autobarn.Website.Controllers.api {
 			return Ok(result);
 		}
 
-		// POST api/vehicles
-		[HttpPost]
-		public IActionResult Post([FromBody] VehicleDto dto) {
-            var existing = db.FindVehicle(dto.Registration);
-
-            if (existing != default) return Conflict($"Sorry, there is already a vehicle with code {dto.Registration} listed for sale.");
-
-            var vehicleModel = db.FindModel(dto.ModelCode);
-            var vehicle = new Vehicle {
-                Registration = dto.Registration,
-                Color = dto.Color,
-                Year = dto.Year,
-                VehicleModel = vehicleModel
-            };
-            db.CreateVehicle(vehicle);
-            return Created($"/api/vehicles/{vehicle.Registration}", dto);
-        }
 
         // PUT api/vehicles/ABC123
         [HttpPut("{id}")]
