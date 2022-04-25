@@ -104,6 +104,7 @@ namespace Autobarn.Data {
 		}
 
 		public void UpdateVehicle(Vehicle vehicle) {
+			vehicle.ModelCode = vehicle.VehicleModel.Code;
 			vehicles[vehicle.Registration] = vehicle;
 		}
 

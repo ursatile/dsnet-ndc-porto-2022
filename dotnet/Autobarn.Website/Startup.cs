@@ -1,4 +1,5 @@
 using Autobarn.Data;
+using EasyNetQ;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Configuration;
@@ -35,6 +36,9 @@ namespace Autobarn.Website {
 					services.AddSingleton<IAutobarnDatabase, AutobarnCsvFileDatabase>();
 					break;
 			}
+
+			var bus = RabbitHutch.CreateBus(Configuration.GetConnectionString("AutobarnRabbitMq"));
+			services.AddSingleton(bus);
 		}
 
 		public void Configure(IApplicationBuilder app, IWebHostEnvironment env) {
