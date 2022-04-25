@@ -37,15 +37,6 @@ public static class Hal {
         return prop.Attributes.OfType<Newtonsoft.Json.JsonIgnoreAttribute>().Any();
     }
 
-    public static IEnumerable<dynamic> ToResources<T>(this IEnumerable<T> list)
-        where T : class {
-        return list.Select(item => Hal.ToResource(item));
-    }
-
-    public static dynamic ToResource(object o) {
-        throw new NotImplementedException();
-    }
-
     public static dynamic ToResource(this Model model) {
         var result = model.ToDynamic();
         result._links = new {

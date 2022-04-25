@@ -1,4 +1,5 @@
 ﻿using Autobarn.Data.Entities;
+using Autobarn.Website.Controllers.api;
 using Newtonsoft.Json;
 using Shouldly;
 using System;
@@ -10,7 +11,7 @@ using System.Threading.Tasks;
 using Xunit;
 
 namespace Autobarn.Website.Tests {
-	public class ApiTests : IClassFixture<TestWebApplicationFactory<Startup>> {
+    public class ApiTests : IClassFixture<TestWebApplicationFactory<Startup>> {
 		private readonly TestWebApplicationFactory<Startup> factory;
 
 		public ApiTests(TestWebApplicationFactory<Startup> factory) {
@@ -25,12 +26,35 @@ namespace Autobarn.Website.Tests {
 		}
 
 		[Fact]
+		public async void GET_Model_Includes_Hypermedia_Actions() {
+			var client = factory.CreateClient();
+			var response = await client.GetAsync("/api/");
+			var json = await response.Content.ReadAsStringAsync();
+			var vehicles = JsonConvert.DeserializeObject<dynamic>(json);
+			var nextHref = (string)vehicles._links["models"].href;
+			var nextResponse = await client.GetAsync(nextHref);
+			var nextJson = await nextResponse.Content.ReadAsStringAsync();
+			var result = JsonConvert.DeserializeObject<dynamic>(nextJson);
+			var modelHref = ((string)result[0]._links.self.href);
+			var modelResponse = await client.GetAsync(modelHref);
+			var modelJson = await modelResponse.Content.ReadAsStringAsync();
+			var model = JsonConvert.DeserializeObject<dynamic>(modelJson);
+			((string)model._actions.create.href).ShouldStartWith("/api/models/");
+		}
+
+		[Fact]
 		public async void GET_vehicles_returns_vehicle_data() {
 			var client = factory.CreateClient();
 			var response = await client.GetAsync("/api/vehicles");
 			var json = await response.Content.ReadAsStringAsync();
-			var vehicles = JsonConvert.DeserializeObject<List<Vehicle>>(json);
-			vehicles.Count.ShouldBeGreaterThan(0);
+			var vehicles = JsonConvert.DeserializeObject<dynamic>(json);
+			var nextHref = (string) vehicles._links["next"].href;
+			var nextResponse = await client.GetAsync(nextHref);
+			var nextJson = await nextResponse.Content.ReadAsStringAsync();
+			var result = JsonConvert.DeserializeObject<dynamic>(nextJson);
+			var items = result.items;
+			((int)items.Count).ShouldBe(VehiclesController.DEFAULT_PAGE_SIZE);
+			// vehicles.Count.ShouldBeGreaterThan(0);
 		}
 
 		[Fact]

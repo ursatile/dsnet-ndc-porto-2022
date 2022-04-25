@@ -18,11 +18,12 @@ namespace Autobarn.Website.Controllers.api {
 			this.db = db;
 		}
 
+		public const int DEFAULT_PAGE_SIZE = 32;
 		// GET: api/vehicles
 		[HttpGet]
 		[Produces("application/hal+json")]
-		public IActionResult Get(int index = 0, int count = 10) {
-			var items = db.ListVehicles().Skip(index).Take(count).ToResources();
+		public IActionResult Get(int index = 0, int count = DEFAULT_PAGE_SIZE) {
+			var items = db.ListVehicles().Skip(index).Take(count).Select(v => v.ToResource());
 			var total = db.CountVehicles();
 			var result = new {
 				_links = Hal.Paginate("/api/vehicles", index, count, total),
