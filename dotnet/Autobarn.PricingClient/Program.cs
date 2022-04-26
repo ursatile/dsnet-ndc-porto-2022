@@ -17,8 +17,17 @@ namespace Autobarn.PricingClient {
             await bus.PubSub.SubscribeAsync<NewVehicleMessage>("autobarn.auditlog", HandleNewVehicleMessage);
             using var channel = GrpcChannel.ForAddress(config["AutobarnPricingServerUrl"]);
             grpcClient = new Pricer.PricerClient(channel);
-            Console.WriteLine("Listening for NewVehicleMessages - press Enter to quit");
-            Console.ReadLine();
+            Console.WriteLine("Listening for NewVehicleMessages - press Ctrl-C to quit");
+            while (true) {
+                Console.ReadLine();
+                var test = new NewVehicleMessage {
+                    Manufacturer = "DMC",
+                    Model = "Delorean",
+                    Year = 1985,
+                    Color = "Silver"
+                };
+                HandleNewVehicleMessage(test);  
+            }
         }
 
         private static async void HandleNewVehicleMessage(NewVehicleMessage message) {
