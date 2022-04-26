@@ -18,4 +18,12 @@ message HelloRequest {
 // The response message containing the greetings.
 message HelloReply {
   string message = 1;
+  Language language = 2;
+}
+
+message Language {
+  string isoCode = 1;
+  string localName = 2;
+  string englishName = 3;
+  bool rightToleft = 4;
 }
