@@ -8,13 +8,14 @@ using EasyNetQ;
 using Autobarn.Messages;
 
 namespace Autobarn.PricingClient {
-    class Program {
+    class Program {      
         static Pricer.PricerClient grpcClient;
         static async Task Main(string[] args) {
             var config = ReadConfiguration();
             var amqp = config.GetConnectionString("AutobarnRabbitMq"); ;
             var bus = RabbitHutch.CreateBus(amqp);
-            await bus.PubSub.SubscribeAsync<NewVehicleMessage>("autobarn.auditlog", HandleNewVehicleMessage);
+            var handler = MakeHandler(bus);
+            await bus.PubSub.SubscribeAsync<NewVehicleMessage>("autobarn.auditlog", handler);
             using var channel = GrpcChannel.ForAddress(config["AutobarnPricingServerUrl"]);
             grpcClient = new Pricer.PricerClient(channel);
             Console.WriteLine("Listening for NewVehicleMessages - press Ctrl-C to quit");
@@ -26,20 +27,24 @@ namespace Autobarn.PricingClient {
                     Year = 1985,
                     Color = "Silver"
                 };
-                HandleNewVehicleMessage(test);  
+                handler(test);  
             }
         }
 
-        private static async void HandleNewVehicleMessage(NewVehicleMessage message) {
-            Console.WriteLine($"Checking pricer for {message.Year} {message.Manufacturer} {message.Model} ({message.Color})");
-            var request = new PriceRequest {
-                Color = message.Color,
-                Manufacturer = message.Manufacturer,
-                Model = message.Model,
-                Year = message.Year
+        private static Action<NewVehicleMessage> MakeHandler(IBus bus) {
+            return async (NewVehicleMessage message) => {
+                Console.WriteLine($"Checking pricer for {message.Year} {message.Manufacturer} {message.Model} ({message.Color})");
+                var request = new PriceRequest {
+                    Color = message.Color,
+                    Manufacturer = message.Manufacturer,
+                    Model = message.Model,
+                    Year = message.Year
+                };
+                var priceReply = await grpcClient.GetPriceAsync(request);
+                Console.WriteLine($"Price: {priceReply.Price} {priceReply.CurrencyCode}");
+                var nvpm = NewVehiclePriceMessage.FromNewVehicleMessage(message, priceReply.Price, priceReply.CurrencyCode);
+                await bus.PubSub.PublishAsync(nvpm);
             };
-            var priceReply = await grpcClient.GetPriceAsync(request);
-            Console.WriteLine($"Price: {priceReply.Price} {priceReply.CurrencyCode}");
         }
 
         private static IConfigurationRoot ReadConfiguration() {
